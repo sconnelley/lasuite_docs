@@ -6,7 +6,9 @@ import { logger } from '@/utils';
 
 export const hocuspocusServer = new Server({
   name: 'docs-collaboration',
-  timeout: 30000,
+  // Increase timeout to 2 minutes to reduce reconnection frequency
+  // Previous 30s timeout was causing excessive reconnections
+  timeout: 120000,
   quiet: true,
   async onConnect({
     requestHeaders,

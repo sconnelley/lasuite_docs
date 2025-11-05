@@ -46,10 +46,9 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
       name: storeId,
       document: doc,
       onDisconnect(data) {
-        // Attempt to reconnect if the disconnection was clean (initiated by the client or server)
-        if ((data.event as ExtendedCloseEvent).wasClean) {
-          void provider.connect();
-        }
+        // HocuspocusProvider handles reconnection automatically
+        // Manual reconnection can cause duplicate connections and reconnection loops
+        // Removed manual reconnect() call to let HocuspocusProvider handle reconnections
       },
       onAuthenticationFailed() {
         set({ isReady: true });
