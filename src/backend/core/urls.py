@@ -10,6 +10,7 @@ from core.api import viewsets
 from core.authentication.views import (
     OIDCAuthenticationRequestView,
     OIDCLogoutView,
+    OIDCLogoutCallbackView,
 )
 
 # - Main endpoints
@@ -66,9 +67,18 @@ for url_pattern in oidc_urls:
         filtered_oidc_urls.append(
             path("logout/", OIDCLogoutView.as_view(), name="oidc_logout")
         )
+    # Skip logout callback from lasuite - we'll add our own
+    elif url_name == "oidc_logout_callback" or "logout-callback" in url_str:
+        # Skip the default logout callback, we'll add our own below
+        continue
     else:
         # Keep other OIDC URLs as-is
         filtered_oidc_urls.append(url_pattern)
+
+# Add logout callback URL with correct name
+filtered_oidc_urls.append(
+    path("logout-callback/", OIDCLogoutCallbackView.as_view(), name="oidc_logout_callback")
+)
 
 urlpatterns = [
     path(
