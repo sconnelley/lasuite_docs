@@ -13,10 +13,24 @@ export const backendUrl = () =>
   (typeof window !== 'undefined' ? window.location.origin : '');
 
 /**
- * Constructs the full base API URL, including the versioned path (e.g., `/api/v1.0/`).
+ * Constructs the full base API URL, including the versioned path (e.g., `/api/v1.0/` or `/api/docs/v1.0/`).
  *
- * @param apiVersion - The version of the API (defaults to '1.0').
+ * @param apiVersion - The version of the API (defaults to '1.0'). Overridden by NEXT_PUBLIC_API_VERSION if set.
  * @returns The full versioned API base URL as a string.
  */
-export const baseApiUrl = (apiVersion = '1.0') =>
-  `${backendUrl()}/api/v${apiVersion}/`;
+export const baseApiUrl = (apiVersion = '1.0') => {
+  const origin = backendUrl();
+  // Use NEXT_PUBLIC_API_VERSION if set (e.g., "docs/v1.0"), otherwise fall back to apiVersion param
+  const fullVersion = process.env.NEXT_PUBLIC_API_VERSION || apiVersion || "v1.0";
+  // Remove 'v' prefix if present (handles both "docs/v1.0" and "v1.0")
+  const versionPath = fullVersion.startsWith("v") ? fullVersion : `v${fullVersion.split("/").pop() || "1.0"}`;
+  // If API_VERSION contains a prefix (e.g., "docs/v1.0"), use it; otherwise use default pattern
+  if (fullVersion.includes("/")) {
+    // Full format: "docs/v1.0" -> "/api/docs/v1.0/"
+    const [prefix, version] = fullVersion.split("/");
+    return `${origin}/api/${prefix}/v${version}/`;
+  } else {
+    // Legacy format: "v1.0" or "1.0" -> "/api/v1.0/"
+    return `${origin}/api/${versionPath}/`;
+  }
+};

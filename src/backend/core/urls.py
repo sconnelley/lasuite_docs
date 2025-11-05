@@ -7,6 +7,10 @@ from lasuite.oidc_login.urls import urlpatterns as oidc_urls
 from rest_framework.routers import DefaultRouter
 
 from core.api import viewsets
+from core.authentication.views import (
+    OIDCAuthenticationRequestView,
+    OIDCLogoutView,
+)
 
 # - Main endpoints
 router = DefaultRouter()
@@ -43,13 +47,36 @@ template_related_router.register(
 )
 
 
+# Filter OIDC URLs to replace authenticate and logout views with custom ones
+filtered_oidc_urls = []
+for url_pattern in oidc_urls:
+    # Check if this is the authenticate or logout URL pattern
+    url_str = str(url_pattern.pattern)
+    url_name = getattr(url_pattern, "name", None)
+    
+    # Replace authenticate view
+    if url_name == "oidc_authentication" or "authenticate" in url_str:
+        # Replace with our custom view
+        filtered_oidc_urls.append(
+            path("authenticate/", OIDCAuthenticationRequestView.as_view(), name="oidc_authentication")
+        )
+    # Replace logout view
+    elif url_name == "oidc_logout" or (hasattr(url_pattern, "name") and "logout" in str(url_name)):
+        # Replace with our custom view
+        filtered_oidc_urls.append(
+            path("logout/", OIDCLogoutView.as_view(), name="oidc_logout")
+        )
+    else:
+        # Keep other OIDC URLs as-is
+        filtered_oidc_urls.append(url_pattern)
+
 urlpatterns = [
     path(
         f"api/{settings.API_VERSION}/",
         include(
             [
                 *router.urls,
-                *oidc_urls,
+                *filtered_oidc_urls,
                 re_path(
                     r"^documents/(?P<resource_id>[0-9a-z-]*)/",
                     include(document_related_router.urls),
