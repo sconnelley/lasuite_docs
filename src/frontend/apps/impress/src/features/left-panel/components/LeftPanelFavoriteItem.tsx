@@ -9,6 +9,7 @@ import { Doc, SimpleDocItem } from '@/docs/doc-management';
 import { DocShareModal } from '@/docs/doc-share';
 import { DocsGridActions } from '@/docs/docs-grid';
 import { useResponsiveStore } from '@/stores';
+import { getDocUrl } from '@/utils';
 
 type LeftPanelFavoriteItemProps = {
   doc: Doc;
@@ -46,7 +47,7 @@ export const LeftPanelFavoriteItem = ({ doc }: LeftPanelFavoriteItemProps) => {
       className="--docs--left-panel-favorite-item"
     >
       <StyledLink
-        href={`/docs/${doc.id}`}
+        href={getDocUrl(doc.id)}
         $css={css`
           overflow: auto;
           outline: none !important;

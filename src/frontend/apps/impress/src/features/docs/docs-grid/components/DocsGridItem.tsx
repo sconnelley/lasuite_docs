@@ -11,6 +11,7 @@ import { Doc, LinkReach, SimpleDocItem } from '@/docs/doc-management';
 import { DocShareModal } from '@/docs/doc-share';
 import { useDate } from '@/hook';
 import { useResponsiveStore } from '@/stores';
+import { getDocUrl } from '@/utils';
 
 import { useResponsiveDocGrid } from '../hooks/useResponsiveDocGrid';
 
@@ -85,7 +86,7 @@ export const DocsGridItem = ({ doc, dragMode = false }: DocsGridItemProps) => {
               align-items: center;
               min-width: 0;
             `}
-            href={`/docs/${doc.id}`}
+            href={getDocUrl(doc.id)}
             onKeyDown={handleKeyDown}
           >
             <Box
@@ -221,7 +222,7 @@ export const DocsGridItemDate = ({
   }
 
   return (
-    <StyledLink href={`/docs/${doc.id}`}>
+    <StyledLink href={`/${doc.id}`}>
       <Text $variation="600" $size="xs">
         {dateToDisplay}
       </Text>

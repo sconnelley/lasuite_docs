@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Box, HorizontalSeparator, Icon, StyledLink, Text } from '@/components';
 import { useCunninghamTheme } from '@/cunningham';
+import { getDocUrl } from '@/utils';
 
 import { Access, useDocStore } from '../../doc-management';
 
@@ -45,7 +46,7 @@ export const DocInheritedShareContent = ({
             {t('People with access via the parent document')}
           </Text>
           <Box>
-            <StyledLink href={`/docs/${rawAccesses[0].document.id}`}>
+            <StyledLink href={getDocUrl(rawAccesses[0].document.id)}>
               <Button
                 size="small"
                 icon={

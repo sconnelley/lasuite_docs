@@ -13,6 +13,8 @@ import { css } from 'styled-components';
 import { Box, Overlayer, StyledLink } from '@/components';
 import { useCunninghamTheme } from '@/cunningham';
 import { Doc, SimpleDocItem } from '@/docs/doc-management';
+import { useResponsiveStore } from '@/stores';
+import { getDocUrl } from '@/utils';
 
 import { KEY_DOC_TREE, useDocTree } from '../api/useDocTree';
 import { useMoveDoc } from '../api/useMove';
@@ -80,7 +82,7 @@ export const DocTree = ({ currentDoc }: DocTreeProps) => {
   const navigateToRoot = useCallback(() => {
     const id = treeContext?.root?.id;
     if (id) {
-      router.push(`/docs/${id}`);
+      router.push(getDocUrl(id));
     }
   }, [router, treeContext?.root?.id]);
 
@@ -251,14 +253,14 @@ export const DocTree = ({ currentDoc }: DocTreeProps) => {
             $css={css`
               width: 100%;
             `}
-            href={`/docs/${treeContext.root.id}`}
+            href={getDocUrl(treeContext.root.id)}
             onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
               treeContext.treeData.setSelectedNode(
                 treeContext.root ?? undefined,
               );
-              router.push(`/docs/${treeContext?.root?.id}`);
+              router.push(getDocUrl(treeContext?.root?.id));
             }}
             aria-label={`${t('Open root document')}: ${treeContext.root?.title || t('Untitled document')}`}
             tabIndex={-1} // avoid double tabstop

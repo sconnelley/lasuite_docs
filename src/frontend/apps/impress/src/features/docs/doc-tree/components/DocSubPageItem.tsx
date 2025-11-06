@@ -18,6 +18,7 @@ import {
 } from '@/features/docs/doc-management';
 import { useLeftPanelStore } from '@/features/left-panel';
 import { useResponsiveStore } from '@/stores';
+import { getDocUrl } from '@/utils';
 
 import { useKeyboardActivation } from '../hooks/useKeyboardActivation';
 
@@ -55,7 +56,7 @@ export const DocSubPageItem = (props: TreeViewNodeProps<Doc>) => {
 
   const handleActivate = () => {
     treeContext?.treeData.setSelectedNode(doc);
-    router.push(`/docs/${doc.id}`);
+    router.push(getDocUrl(doc.id));
   };
 
   const afterCreate = (createdDoc: Doc) => {
@@ -67,7 +68,7 @@ export const DocSubPageItem = (props: TreeViewNodeProps<Doc>) => {
         .then((allChildren) => {
           node.open();
 
-          router.push(`/docs/${createdDoc.id}`);
+          router.push(getDocUrl(createdDoc.id));
           treeContext?.treeData.setChildren(node.data.value.id, allChildren);
           treeContext?.treeData.setSelectedNode(createdDoc);
           togglePanel();
@@ -82,7 +83,7 @@ export const DocSubPageItem = (props: TreeViewNodeProps<Doc>) => {
       };
       treeContext?.treeData.addChild(node.data.value.id, newDoc);
       node.open();
-      router.push(`/docs/${createdDoc.id}`);
+      router.push(getDocUrl(createdDoc.id));
       treeContext?.treeData.setSelectedNode(newDoc);
       togglePanel();
     }

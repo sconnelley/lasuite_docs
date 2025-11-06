@@ -32,6 +32,7 @@ import {
 } from '@/docs/doc-management';
 import { DocSearchSubPageContent, DocSearchTarget } from '@/docs/doc-search';
 import { useResponsiveStore } from '@/stores';
+import { getDocUrl } from '@/utils';
 
 const inputStyle = css`
   background-color: var(--c--theme--colors--greyscale-100);
@@ -228,7 +229,7 @@ export const SearchPage = ({
                   {
                     type: 'interlinkingLinkInline',
                     props: {
-                      url: `/docs/${doc.id}`,
+                      url: getDocUrl(doc.id),
                       docId: doc.id,
                       title: doc.title || untitledDocument,
                     },

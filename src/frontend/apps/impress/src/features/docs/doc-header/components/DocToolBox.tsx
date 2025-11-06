@@ -35,6 +35,7 @@ import {
 } from '@/docs/doc-versioning';
 import { useAnalytics } from '@/libs';
 import { useResponsiveStore } from '@/stores';
+import { getDocUrl } from '@/utils';
 
 import { useCopyCurrentEditorToClipboard } from '../hooks/useCopyCurrentEditorToClipboard';
 
@@ -64,7 +65,7 @@ export const DocToolBox = ({ doc }: DocToolBoxProps) => {
   const copyDocLink = useCopyDocLink(doc.id);
   const { mutate: duplicateDoc } = useDuplicateDoc({
     onSuccess: (data) => {
-      void router.push(`/docs/${data.id}`);
+      void router.push(getDocUrl(data.id));
     },
   });
   const { isFeatureFlagActivated } = useAnalytics();
@@ -269,7 +270,7 @@ export const DocToolBox = ({ doc }: DocToolBoxProps) => {
             if (isTopParent) {
               void router.push(`/`);
             } else if (parentId) {
-              void router.push(`/docs/${parentId}`).then(() => {
+              void router.push(getDocUrl(parentId)).then(() => {
                 setTimeout(() => {
                   treeContext?.treeData.deleteNode(doc.id);
                 }, 100);

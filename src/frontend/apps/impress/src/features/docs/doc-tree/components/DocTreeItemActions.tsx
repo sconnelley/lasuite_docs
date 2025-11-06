@@ -51,7 +51,7 @@ export const DocTreeItemActions = ({
     onSuccess: (duplicatedDoc) => {
       // Reset the tree context root will reset the full tree view.
       treeContext?.setRoot(null);
-      void router.push(`/docs/${duplicatedDoc.id}`);
+      void router.push(getDocUrl(duplicatedDoc.id));
     },
   });
 
@@ -73,7 +73,7 @@ export const DocTreeItemActions = ({
         onSuccess: () => {
           if (treeContext.root) {
             treeContext.treeData.setSelectedNode(treeContext.root);
-            void router.push(`/docs/${treeContext.root.id}`).then(() => {
+            void router.push(getDocUrl(treeContext.root.id)).then(() => {
               setTimeout(() => {
                 treeContext?.treeData.deleteNode(doc.id);
               }, 100);
@@ -140,7 +140,7 @@ export const DocTreeItemActions = ({
   const { mutate: createChildDoc } = useCreateChildDoc({
     onSuccess: (newDoc) => {
       onCreateSuccess?.(newDoc);
-      void router.push(`/docs/${newDoc.id}`);
+      void router.push(getDocUrl(newDoc.id));
     },
   });
 
@@ -151,7 +151,7 @@ export const DocTreeItemActions = ({
     if (isTopParent) {
       void router.push(`/`);
     } else if (parentIdComputed) {
-      void router.push(`/docs/${parentIdComputed}`).then(() => {
+      void router.push(getDocUrl(parentIdComputed)).then(() => {
         setTimeout(() => {
           treeContext?.treeData.deleteNode(doc.id);
         }, 100);

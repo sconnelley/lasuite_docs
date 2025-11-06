@@ -15,6 +15,7 @@ import {
   useProviderStore,
   useUpdateDoc,
 } from '@/docs/doc-management/';
+import { getDocUrl } from '@/utils';
 
 import { useDocVersion } from '../api';
 import { KEY_LIST_DOC_VERSIONS } from '../api/useDocVersions';
@@ -46,7 +47,7 @@ export const ModalConfirmationVersion = ({
     onSuccess: () => {
       const onDisplaySuccess = () => {
         toast(t('Version restored successfully'), VariantType.SUCCESS);
-        void push(`/docs/${docId}`);
+        void push(getDocUrl(docId));
       };
 
       if (!provider || !version?.content) {

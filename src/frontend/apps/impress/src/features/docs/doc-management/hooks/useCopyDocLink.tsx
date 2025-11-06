@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useClipboard } from '@/hook';
+import { getDocUrlAbsolute } from '@/utils/url';
 
 import { Doc } from '../types';
 
@@ -11,7 +12,7 @@ export const useCopyDocLink = (docId: Doc['id']) => {
 
   return useCallback(() => {
     copyToClipboard(
-      `${window.location.origin}/docs/${docId}/`,
+      getDocUrlAbsolute(docId),
       t('Link Copied !'),
       t('Failed to copy link'),
     );

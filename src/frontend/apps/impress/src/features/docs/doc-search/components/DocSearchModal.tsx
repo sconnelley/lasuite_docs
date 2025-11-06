@@ -9,6 +9,7 @@ import { Box, ButtonCloseModal, Text } from '@/components';
 import { QuickSearch } from '@/components/quick-search';
 import { Doc, useDocUtils } from '@/docs/doc-management';
 import { useResponsiveStore } from '@/stores';
+import { getDocUrl } from '@/utils';
 
 import EmptySearchIcon from '../assets/illustration-docs-empty.png';
 
@@ -50,7 +51,7 @@ const DocSearchModalGlobal = ({
   const handleInputSearch = useDebouncedCallback(setSearch, 300);
 
   const handleSelect = (doc: Doc) => {
-    void router.push(`/docs/${doc.id}`);
+    void router.push(getDocUrl(doc.id));
     modalProps.onClose?.();
   };
 

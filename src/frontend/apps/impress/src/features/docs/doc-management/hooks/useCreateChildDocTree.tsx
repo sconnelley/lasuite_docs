@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 
 import { useCreateChildDoc } from '../api';
 import { Doc } from '../types';
+import { getDocUrl } from '@/utils';
 
 export const useCreateChildDocTree = (parentId?: string) => {
   const treeContext = useTreeContext<Doc>();
@@ -18,7 +19,7 @@ export const useCreateChildDocTree = (parentId?: string) => {
       };
       treeContext?.treeData.addChild(parentId || null, newDoc);
 
-      router.push(`/docs/${newDoc.id}`);
+      router.push(getDocUrl(newDoc.id));
       treeContext?.treeData.setSelectedNode(createdDoc);
     },
   });
