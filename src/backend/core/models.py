@@ -829,6 +829,23 @@ class Document(MP_Node, BaseModel):
             msg_plain = render_to_string("mail/text/template.txt", context)
             subject = str(subject)  # Force translation
 
+            # Debug: Log email configuration and sending attempt
+            logger.info(
+                "Attempting to send email invitation",
+                extra={
+                    "to": emails,
+                    "from": settings.EMAIL_FROM,
+                    "subject": subject.capitalize(),
+                    "email_backend": settings.EMAIL_BACKEND,
+                    "email_host": getattr(settings, "EMAIL_HOST", None),
+                    "email_port": getattr(settings, "EMAIL_PORT", None),
+                    "email_use_tls": getattr(settings, "EMAIL_USE_TLS", None),
+                    "email_use_ssl": getattr(settings, "EMAIL_USE_SSL", None),
+                    "email_host_user": getattr(settings, "EMAIL_HOST_USER", None),
+                    "email_host_password_set": bool(getattr(settings, "EMAIL_HOST_PASSWORD", None)),
+                },
+            )
+
             try:
                 send_mail(
                     subject.capitalize(),
@@ -838,8 +855,23 @@ class Document(MP_Node, BaseModel):
                     html_message=msg_html,
                     fail_silently=False,
                 )
+                logger.info("Email invitation sent successfully", extra={"to": emails})
             except smtplib.SMTPException as exception:
-                logger.error("invitation to %s was not sent: %s", emails, exception)
+                logger.error(
+                    "invitation to %s was not sent: %s",
+                    emails,
+                    exception,
+                    exc_info=True,  # Include full traceback
+                )
+            except Exception as exception:
+                # Catch any other exceptions (connection errors, configuration errors, etc.)
+                logger.error(
+                    "Unexpected error sending invitation to %s: %s (type: %s)",
+                    emails,
+                    exception,
+                    type(exception).__name__,
+                    exc_info=True,  # Include full traceback
+                )
 
     def send_invitation_email(self, email, role, sender, language=None):
         """Method allowing a user to send an email invitation to another user for a document."""

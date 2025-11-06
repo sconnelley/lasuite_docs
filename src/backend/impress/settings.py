@@ -854,6 +854,24 @@ class Base(Configuration):
         """
         super().post_setup()
 
+        # Log email configuration for debugging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(
+            "Email configuration",
+            extra={
+                "EMAIL_BACKEND": cls.EMAIL_BACKEND,
+                "EMAIL_HOST": cls.EMAIL_HOST,
+                "EMAIL_PORT": cls.EMAIL_PORT,
+                "EMAIL_USE_TLS": cls.EMAIL_USE_TLS,
+                "EMAIL_USE_SSL": cls.EMAIL_USE_SSL,
+                "EMAIL_HOST_USER": cls.EMAIL_HOST_USER,
+                "EMAIL_HOST_PASSWORD_SET": bool(cls.EMAIL_HOST_PASSWORD),
+                "EMAIL_FROM": cls.EMAIL_FROM,
+                "EMAIL_BRAND_NAME": cls.EMAIL_BRAND_NAME,
+            },
+        )
+
         # The SENTRY_DSN setting should be available to activate sentry for an environment
         if cls.SENTRY_DSN is not None:
             sentry_sdk.init(
