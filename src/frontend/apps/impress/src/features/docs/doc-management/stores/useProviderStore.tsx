@@ -32,6 +32,17 @@ const failureTracker = new Map<string, { count: number; lastFailureTime: number 
 const MAX_CONSECUTIVE_FAILURES = 5;
 const FAILURE_RESET_TIME = 30000; // 30 seconds
 
+// Helper function to get status name from numeric status code
+const getStatusName = (status: number): string => {
+  // Map numeric status codes to names
+  const statusMap: Record<number, string> = {
+    [WebSocketStatus.Disconnected]: 'Disconnected',
+    [WebSocketStatus.Connecting]: 'Connecting',
+    [WebSocketStatus.Connected]: 'Connected',
+  };
+  return statusMap[status] || `Unknown(${status})`;
+};
+
 export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
   ...defaultValues,
   createProvider: (wsUrl, storeId, initialDoc) => {
@@ -100,7 +111,7 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
             previousStatus: prevState.isConnected ? 'connected' : 'disconnected',
             newStatus: nextConnected ? 'connected' : 'disconnected',
             statusCode: status,
-            statusName: WebSocketStatus[status] || 'Unknown',
+            statusName: getStatusName(status),
             timestamp: new Date().toISOString(),
           });
         }
