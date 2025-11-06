@@ -8,17 +8,19 @@ export const useCollaborationUrl = (room?: string) => {
   }
 
   // HocusPocus appends the document name (room) to the URL path
-  // The server expects: /collaboration/{room-id}?room={room-id}
-  // So we construct: ${base}${room}?room=${room}
-  // The base URL should be just the collaboration endpoint without /ws/ or room ID
+  // Nginx strips /collaboration/ and forwards to y-provider
+  // So /collaboration/ws/{room-id} becomes /ws/{room-id} on the backend
+  // The server expects: /ws/{room-id}?room={room-id}
+  // So we construct: wss://host/collaboration/ws/?room={room-id}
+  // HocusPocus will append the room ID to create: wss://host/collaboration/ws/{room-id}?room={room-id}
   const base =
     conf?.COLLABORATION_WS_URL ||
     (typeof window !== 'undefined'
-      ? `wss://${window.location.host}/collaboration/`
+      ? `wss://${window.location.host}/collaboration/ws/`
       : '');
 
-  // HocusPocus will append the document name (room) to the URL
+  // HocusPocus will append the document name (room) to the URL path
   // We need to include the room query parameter for server validation
-  // Note: HocusPocus constructs the final URL as ${base}${room}?room=${room}
+  // Final URL: ${base}${room}?room=${room}
   return `${base}?room=${room}`;
 };
