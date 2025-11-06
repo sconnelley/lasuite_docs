@@ -440,17 +440,31 @@ class Base(Configuration):
     )
 
     # Mail
-    EMAIL_BACKEND = values.Value("django.core.mail.backends.smtp.EmailBackend")
+    # Default to Resend REST API backend (works on Railway which blocks SMTP ports)
+    # To use SMTP instead, set EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+    EMAIL_BACKEND = values.Value("core.email_backends.ResendEmailBackend")
     EMAIL_BRAND_NAME = values.Value(None)
+    EMAIL_FROM = values.Value("from@example.com")
+    EMAIL_LOGO_IMG = values.Value(None)
+    EMAIL_TIMEOUT = values.PositiveIntegerValue(10)  # Timeout for email API calls
+    
+    # Resend API settings (for ResendEmailBackend)
+    RESEND_API_KEY = SecretFileValue(
+        None, environ_name="RESEND_API_KEY", environ_prefix=None
+    )
+    RESEND_API_URL = values.Value(
+        "https://api.resend.com/emails",
+        environ_name="RESEND_API_URL",
+        environ_prefix=None,
+    )
+    
+    # SMTP settings (for django.core.mail.backends.smtp.EmailBackend)
     EMAIL_HOST = values.Value(None)
     EMAIL_HOST_USER = values.Value(None)
     EMAIL_HOST_PASSWORD = SecretFileValue(None)
-    EMAIL_LOGO_IMG = values.Value(None)
     EMAIL_PORT = values.PositiveIntegerValue(None)
     EMAIL_USE_TLS = values.BooleanValue(False)
     EMAIL_USE_SSL = values.BooleanValue(False)
-    EMAIL_FROM = values.Value("from@example.com")
-    EMAIL_TIMEOUT = values.PositiveIntegerValue(10)  # 10 second timeout for SMTP connections
 
     AUTH_USER_MODEL = "core.User"
     INVITATION_VALIDITY_DURATION = 604800  # 7 days, in seconds
@@ -858,12 +872,20 @@ class Base(Configuration):
         # Log email configuration for debugging
         import logging
         logger = logging.getLogger(__name__)
-        logger.info(
-            f"Email configuration: backend={cls.EMAIL_BACKEND}, host={cls.EMAIL_HOST}, "
-            f"port={cls.EMAIL_PORT}, use_tls={cls.EMAIL_USE_TLS}, use_ssl={cls.EMAIL_USE_SSL}, "
-            f"user={cls.EMAIL_HOST_USER}, password_set={bool(cls.EMAIL_HOST_PASSWORD)}, "
-            f"from={cls.EMAIL_FROM}, brand={cls.EMAIL_BRAND_NAME}, timeout={cls.EMAIL_TIMEOUT}s"
-        )
+        
+        if cls.EMAIL_BACKEND == "core.email_backends.ResendEmailBackend":
+            logger.info(
+                f"Email configuration: backend=ResendEmailBackend (REST API), "
+                f"from={cls.EMAIL_FROM}, api_key_set={bool(cls.RESEND_API_KEY)}, "
+                f"brand={cls.EMAIL_BRAND_NAME}, timeout={cls.EMAIL_TIMEOUT}s"
+            )
+        else:
+            logger.info(
+                f"Email configuration: backend={cls.EMAIL_BACKEND}, host={cls.EMAIL_HOST}, "
+                f"port={cls.EMAIL_PORT}, use_tls={cls.EMAIL_USE_TLS}, use_ssl={cls.EMAIL_USE_SSL}, "
+                f"user={cls.EMAIL_HOST_USER}, password_set={bool(cls.EMAIL_HOST_PASSWORD)}, "
+                f"from={cls.EMAIL_FROM}, brand={cls.EMAIL_BRAND_NAME}, timeout={cls.EMAIL_TIMEOUT}s"
+            )
 
         # The SENTRY_DSN setting should be available to activate sentry for an environment
         if cls.SENTRY_DSN is not None:
