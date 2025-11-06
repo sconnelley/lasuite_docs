@@ -30,7 +30,10 @@ const defaultValues = {
 };
 
 // Track consecutive failures per room to prevent rapid reconnection loops
-const failureTracker = new Map<string, { count: number; lastFailureTime: number }>();
+const failureTracker = new Map<
+  string,
+  { count: number; lastFailureTime: number }
+>();
 // Track rooms where provider creation is temporarily disabled due to failures
 const disabledRooms = new Set<string>();
 const MAX_CONSECUTIVE_FAILURES = 5;
@@ -56,25 +59,33 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
   createProvider: (wsUrl, storeId, initialDoc) => {
     // Check if provider creation is disabled for this room
     if (disabledRooms.has(storeId)) {
-      console.warn('[WebSocket] Provider creation disabled for room, skipping', {
-        room: storeId,
-        timestamp: new Date().toISOString(),
-      });
+      console.warn(
+        '[WebSocket] Provider creation disabled for room, skipping',
+        {
+          room: storeId,
+          timestamp: new Date().toISOString(),
+        },
+      );
       // Return existing provider if it exists, otherwise throw an error
       const existing = get().provider;
       if (existing) {
         return existing;
       }
-      throw new Error(`Provider creation disabled for room ${storeId} due to too many failures`);
+      throw new Error(
+        `Provider creation disabled for room ${storeId} due to too many failures`,
+      );
     }
 
     // Destroy existing provider if one exists to prevent multiple connections
     const existingProvider = get().provider;
     if (existingProvider) {
-      console.warn('[WebSocket] Destroying existing provider before creating new one', {
-        room: storeId,
-        timestamp: new Date().toISOString(),
-      });
+      console.warn(
+        '[WebSocket] Destroying existing provider before creating new one',
+        {
+          room: storeId,
+          timestamp: new Date().toISOString(),
+        },
+      );
       existingProvider.destroy();
     }
 
@@ -139,7 +150,9 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
         if (statusChanged) {
           console.log('[WebSocket] Status changed', {
             room: storeId,
-            previousStatus: prevState.isConnected ? 'connected' : 'disconnected',
+            previousStatus: prevState.isConnected
+              ? 'connected'
+              : 'disconnected',
             newStatus: nextConnected ? 'connected' : 'disconnected',
             statusCode: status,
             statusName: getStatusName(status),
@@ -173,7 +186,7 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
          * for clients in the room.
          * A disconnect is made automatically but it takes time to be triggered,
          * so we force the disconnection here.
-         * 
+         *
          * Code 1005 = No Status Received (abnormal closure)
          * Code 1000 = Normal Closure
          */
@@ -182,7 +195,10 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
         const now = Date.now();
 
         // Get failure tracker for this room
-        const tracker = failureTracker.get(storeId) || { count: 0, lastFailureTime: 0 };
+        const tracker = failureTracker.get(storeId) || {
+          count: 0,
+          lastFailureTime: 0,
+        };
 
         // Track consecutive failures for abnormal closures
         if (closeCode === 1005) {
@@ -219,13 +235,16 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
         // But if we have too many consecutive failures, stop reconnecting
         if (closeCode === 1005) {
           if (tracker.count >= MAX_CONSECUTIVE_FAILURES) {
-            console.error('[WebSocket] Too many consecutive failures. Stopping reconnection attempts and disabling provider creation.', {
-              room: storeId,
-              consecutiveFailures: tracker.count,
-              reason: closeReason,
-              url: wsUrl,
-              timestamp: new Date().toISOString(),
-            });
+            console.error(
+              '[WebSocket] Too many consecutive failures. Stopping reconnection attempts and disabling provider creation.',
+              {
+                room: storeId,
+                consecutiveFailures: tracker.count,
+                reason: closeReason,
+                url: wsUrl,
+                timestamp: new Date().toISOString(),
+              },
+            );
             // Stop reconnection by destroying the provider
             provider.destroy();
             set(defaultValues);
@@ -236,19 +255,25 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
             // Auto-reset after FAILURE_RESET_TIME
             setTimeout(() => {
               disabledRooms.delete(storeId);
-              console.log('[WebSocket] Provider creation re-enabled for room after timeout', {
-                room: storeId,
-                timestamp: new Date().toISOString(),
-              });
+              console.log(
+                '[WebSocket] Provider creation re-enabled for room after timeout',
+                {
+                  room: storeId,
+                  timestamp: new Date().toISOString(),
+                },
+              );
             }, FAILURE_RESET_TIME);
           } else {
-            console.warn('[WebSocket] Abnormal closure detected (code 1005). HocuspocusProvider will attempt reconnection.', {
-              room: storeId,
-              consecutiveFailures: tracker.count,
-              reason: closeReason,
-              url: wsUrl,
-              timestamp: new Date().toISOString(),
-            });
+            console.warn(
+              '[WebSocket] Abnormal closure detected (code 1005). HocuspocusProvider will attempt reconnection.',
+              {
+                room: storeId,
+                consecutiveFailures: tracker.count,
+                reason: closeReason,
+                url: wsUrl,
+                timestamp: new Date().toISOString(),
+              },
+            );
           }
         }
       },

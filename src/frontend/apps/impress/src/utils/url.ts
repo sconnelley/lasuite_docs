@@ -1,11 +1,11 @@
 /**
  * Gets the base path for the application.
- * 
+ *
  * Priority:
  * 1. Uses NEXT_PUBLIC_BASE_PATH from environment variables if defined.
  * 2. Falls back to reading from Next.js router if available (for runtime).
  * 3. Defaults to empty string (root path).
- * 
+ *
  * @returns The base path (e.g., "/docs" or "")
  */
 export function getBasePath(): string {
@@ -28,16 +28,16 @@ export function getBasePath(): string {
 
 /**
  * Constructs a document URL path.
- * 
+ *
  * When Next.js basePath is set (e.g., "/docs"), this function returns a path
  * relative to the basePath. Next.js will automatically prepend basePath when
  * using router.push() or Link components.
- * 
+ *
  * Example:
  * - basePath = "/docs"
  * - getDocUrl("abc123") returns "/abc123"
  * - Next.js router.push(getDocUrl("abc123")) navigates to "/docs/abc123"
- * 
+ *
  * @param docId - The document ID
  * @returns The document URL path (relative to basePath)
  */
@@ -47,12 +47,12 @@ export function getDocUrl(docId: string): string {
 
 /**
  * Constructs an absolute document URL (including basePath).
- * 
+ *
  * Use this for:
  * - Copying links to clipboard
  * - External links
  * - Any case where you need the full URL including basePath
- * 
+ *
  * @param docId - The document ID
  * @returns The absolute document URL (e.g., "https://example.com/docs/abc123/")
  */

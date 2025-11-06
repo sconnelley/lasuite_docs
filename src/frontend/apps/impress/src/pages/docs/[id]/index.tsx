@@ -61,7 +61,8 @@ interface DocProps {
 }
 
 const DocPage = ({ id }: DocProps) => {
-  const { hasLostConnection, resetLostConnection, isConnected } = useProviderStore();
+  const { hasLostConnection, resetLostConnection, isConnected } =
+    useProviderStore();
   const { isSkeletonVisible, setIsSkeletonVisible } = useSkeletonStore();
   const {
     data: docQuery,
@@ -148,10 +149,13 @@ const DocPage = ({ id }: DocProps) => {
       const checkAndInvalidate = () => {
         const currentState = useProviderStore.getState();
         if (currentState.hasLostConnection && !currentState.isConnected) {
-          console.log('[Document] Invalidating document query after connection loss', {
-            docId: doc.id,
-            timestamp: new Date().toISOString(),
-          });
+          console.log(
+            '[Document] Invalidating document query after connection loss',
+            {
+              docId: doc.id,
+              timestamp: new Date().toISOString(),
+            },
+          );
           void queryClient.invalidateQueries({
             queryKey: [KEY_DOC, { id: doc.id }],
           });
@@ -164,7 +168,13 @@ const DocPage = ({ id }: DocProps) => {
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [hasLostConnection, doc?.id, queryClient, resetLostConnection, isConnected]);
+  }, [
+    hasLostConnection,
+    doc?.id,
+    queryClient,
+    resetLostConnection,
+    isConnected,
+  ]);
 
   useEffect(() => {
     if (!docQuery || isFetching) {
