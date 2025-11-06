@@ -1,9 +1,10 @@
 import { useTreeContext } from '@gouvfr-lasuite/ui-kit';
 import { useRouter } from 'next/navigation';
 
+import { getDocUrl } from '@/utils';
+
 import { useCreateChildDoc } from '../api';
 import { Doc } from '../types';
-import { getDocUrl } from '@/utils';
 
 export const useCreateChildDocTree = (parentId?: string) => {
   const treeContext = useTreeContext<Doc>();

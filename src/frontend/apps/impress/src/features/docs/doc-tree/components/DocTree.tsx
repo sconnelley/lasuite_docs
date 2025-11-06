@@ -13,7 +13,6 @@ import { css } from 'styled-components';
 import { Box, Overlayer, StyledLink } from '@/components';
 import { useCunninghamTheme } from '@/cunningham';
 import { Doc, SimpleDocItem } from '@/docs/doc-management';
-import { useResponsiveStore } from '@/stores';
 import { getDocUrl } from '@/utils';
 
 import { KEY_DOC_TREE, useDocTree } from '../api/useDocTree';

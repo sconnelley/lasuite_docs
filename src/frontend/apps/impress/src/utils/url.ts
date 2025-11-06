@@ -17,9 +17,9 @@ export function getBasePath(): string {
   // Fallback: try to read from Next.js router if available (runtime)
   if (typeof window !== 'undefined') {
     // Next.js sets __NEXT_DATA__.basePath at runtime
-    const nextData = (window as any).__NEXT_DATA__;
-    if (nextData?.basePath) {
-      return nextData.basePath;
+    const nextData = (window as Window).__NEXT_DATA__;
+    if (nextData && 'basePath' in nextData) {
+      return nextData.basePath as string;
     }
   }
 
