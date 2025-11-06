@@ -1,11 +1,16 @@
 """Docs core authentication views."""
 
+import logging
 from django.conf import settings
 from django.contrib import auth
 from django.core.exceptions import SuspiciousOperation
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from urllib.parse import urlencode, urlparse, parse_qs, urlunparse
+from urllib.request import Request, urlopen
+from urllib.error import URLError
+
+logger = logging.getLogger(__name__)
 
 from lasuite.oidc_login.views import (
     OIDCAuthenticationCallbackView as LaSuiteOIDCAuthenticationCallbackView,
@@ -165,9 +170,72 @@ class OIDCLogoutCallbackView(LaSuiteOIDCLogoutView):
         del request.session["oidc_states"][state]
         request.session.save()
 
-        # Perform Django logout
+        # Perform Django logout for current app (Docs)
         auth.logout(request)
+
+        # Also clear session in Drive backend for shared logout
+        # This ensures logging out of one app logs out of both
+        try:
+            # Get session cookies from request
+            drive_session_id = request.COOKIES.get('drive_sessionid')
+            if drive_session_id:
+                # Make internal request to Drive backend to clear its session
+                # Use Railway internal DNS: drive-backend.railway.internal
+                drive_backend_url = getattr(settings, 'DRIVE_BACKEND_INTERNAL_URL', 
+                                           'http://drive-backend.railway.internal:8080')
+                drive_logout_url = f"{drive_backend_url}/api/drive/v1.0/internal-logout/"
+                
+                # Create POST request with the Drive session cookie
+                logout_data = b''  # Empty body for POST
+                logout_req = Request(drive_logout_url, data=logout_data, method='POST')
+                logout_req.add_header('Cookie', f'drive_sessionid={drive_session_id}')
+                
+                # Add internal secret header for authentication
+                internal_secret = getattr(settings, 'INTERNAL_LOGOUT_SECRET', None)
+                if internal_secret:
+                    logout_req.add_header('X-Internal-Logout-Secret', internal_secret)
+                
+                # Add any other headers that might be needed
+                logout_req.add_header('Content-Type', 'application/json')
+                logout_req.add_header('X-Forwarded-Proto', 'https')
+                logout_req.add_header('Host', request.get_host())
+                
+                # Make the request (fire and forget - don't wait for response)
+                try:
+                    urlopen(logout_req, timeout=2)
+                except URLError as e:
+                    # Log but don't fail - this is best-effort cross-app logout
+                    logger.warning(f"Failed to clear Drive session during logout: {e}")
+        except Exception as e:
+            # Log but don't fail - this is best-effort cross-app logout
+            logger.warning(f"Error clearing Drive session during logout: {e}")
 
         # Redirect to final logout URL
         return HttpResponseRedirect(self.redirect_url)
+
+
+class InternalLogoutView(LaSuiteOIDCLogoutView):
+    """
+    Internal logout endpoint for cross-app session clearing.
+    Accepts a session cookie and clears it. Protected by internal secret.
+    """
+    
+    http_method_names = ["post"]
+    
+    def post(self, request):
+        """Clear session for internal logout requests."""
+        # Verify internal secret (protect against external abuse)
+        internal_secret = getattr(settings, 'INTERNAL_LOGOUT_SECRET', None)
+        if internal_secret:
+            provided_secret = request.headers.get('X-Internal-Logout-Secret')
+            if provided_secret != internal_secret:
+                from django.http import HttpResponseForbidden
+                return HttpResponseForbidden("Invalid internal logout secret")
+        
+        # Clear session if user is authenticated
+        if request.user.is_authenticated:
+            auth.logout(request)
+        
+        from django.http import JsonResponse
+        return JsonResponse({"status": "ok"})
 

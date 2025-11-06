@@ -11,6 +11,7 @@ from core.authentication.views import (
     OIDCAuthenticationRequestView,
     OIDCLogoutView,
     OIDCLogoutCallbackView,
+    InternalLogoutView,
 )
 
 # - Main endpoints
@@ -78,6 +79,11 @@ for url_pattern in oidc_urls:
 # Add logout callback URL with correct name
 filtered_oidc_urls.append(
     path("logout-callback/", OIDCLogoutCallbackView.as_view(), name="oidc_logout_callback")
+)
+
+# Add internal logout endpoint for cross-app session clearing
+filtered_oidc_urls.append(
+    path("internal-logout/", InternalLogoutView.as_view(), name="internal_logout")
 )
 
 urlpatterns = [
