@@ -10,6 +10,9 @@ const buildId = crypto.randomBytes(256).toString('hex').slice(0, 8);
 const nextConfig = {
   output: 'export',
   trailingSlash: true,
+  // basePath can be set via NEXT_PUBLIC_BASE_PATH environment variable
+  // Defaults to empty string (root path) if not set
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
   images: {
     unoptimized: true,
   },
