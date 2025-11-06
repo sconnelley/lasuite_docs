@@ -32,15 +32,19 @@ const failureTracker = new Map<string, { count: number; lastFailureTime: number 
 const MAX_CONSECUTIVE_FAILURES = 5;
 const FAILURE_RESET_TIME = 30000; // 30 seconds
 
-// Helper function to get status name from numeric status code
-const getStatusName = (status: number): string => {
-  // Map numeric status codes to names
-  const statusMap: Record<number, string> = {
-    [WebSocketStatus.Disconnected]: 'Disconnected',
-    [WebSocketStatus.Connecting]: 'Connecting',
-    [WebSocketStatus.Connected]: 'Connected',
-  };
-  return statusMap[status] || `Unknown(${status})`;
+// Helper function to get status name from WebSocketStatus
+const getStatusName = (status: WebSocketStatus): string => {
+  // Map WebSocketStatus values to names
+  if (status === WebSocketStatus.Disconnected) {
+    return 'Disconnected';
+  }
+  if (status === WebSocketStatus.Connecting) {
+    return 'Connecting';
+  }
+  if (status === WebSocketStatus.Connected) {
+    return 'Connected';
+  }
+  return `Unknown(${String(status)})`;
 };
 
 export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
@@ -104,7 +108,7 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
         const statusChanged = prevState.isConnected !== nextConnected;
         
         // Log status changes for monitoring
-        // Note: status is a number (WebSocketStatus enum value), not a string
+        // Note: status is a WebSocketStatus enum value
         if (statusChanged) {
           console.log('[WebSocket] Status changed', {
             room: storeId,
