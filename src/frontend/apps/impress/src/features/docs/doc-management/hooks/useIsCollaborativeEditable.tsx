@@ -31,7 +31,11 @@ export const useIsCollaborativeEditable = (doc: Doc) => {
     {
       enabled: !_isEditable,
       queryKey: [KEY_CAN_EDIT, doc.id],
-      staleTime: 0,
+      // Increase staleTime to reduce polling - edit permissions don't change frequently
+      staleTime: 60000, // 1 minute
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
     },
   );
 

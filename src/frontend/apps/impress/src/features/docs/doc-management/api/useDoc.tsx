@@ -9,13 +9,23 @@ export type DocParams = {
 };
 
 export const getDoc = async ({ id }: DocParams): Promise<Doc> => {
+  console.log('[Document API] Fetching document', {
+    docId: id,
+    timestamp: new Date().toISOString(),
+    stack: new Error().stack?.split('\n').slice(1, 4).join('\n'), // Get caller info
+  });
   const response = await fetchAPI(`documents/${id}/`);
 
   if (!response.ok) {
     throw new APIError('Failed to get the doc', await errorCauses(response));
   }
 
-  return response.json() as Promise<Doc>;
+  const doc = await response.json();
+  console.log('[Document API] Document fetched successfully', {
+    docId: id,
+    timestamp: new Date().toISOString(),
+  });
+  return doc as Promise<Doc>;
 };
 
 export const KEY_DOC = 'doc';

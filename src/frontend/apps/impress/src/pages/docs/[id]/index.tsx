@@ -71,13 +71,16 @@ const DocPage = ({ id }: DocProps) => {
   } = useDoc(
     { id },
     {
-      // Increase staleTime to 30 seconds to reduce unnecessary refetches
-      // Document updates are handled via WebSocket, so we don't need frequent polling
-      staleTime: 30000, // 30 seconds
-      // Disable automatic refetches that can cause excessive API calls
-      refetchOnWindowFocus: false, // Don't refetch when window regains focus
-      refetchOnMount: false, // Don't refetch on component remount if data is fresh
-      refetchOnReconnect: false, // Don't refetch on network reconnect (WebSocket handles sync)
+      // Set staleTime to Infinity since document updates come via WebSocket
+      // The document is only fetched once on initial load, then WebSocket handles all updates
+      staleTime: Infinity,
+      // Keep data in cache indefinitely (until manually invalidated)
+      gcTime: Infinity,
+      // Disable ALL automatic refetches - WebSocket handles all updates
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+      refetchInterval: false, // Explicitly disable interval refetching
       queryKey: [KEY_DOC, { id }],
       retryDelay: 1000,
       retry: (failureCount, error) => {
