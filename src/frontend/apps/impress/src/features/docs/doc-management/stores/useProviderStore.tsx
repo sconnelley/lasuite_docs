@@ -113,7 +113,6 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
           room: storeId,
           code: data.event.code,
           reason: data.event.reason,
-          wasClean: data.event.wasClean,
           timestamp: new Date().toISOString(),
         });
         if (data.event.code === 1000) {
