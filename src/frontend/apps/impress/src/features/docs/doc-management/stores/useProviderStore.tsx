@@ -17,6 +17,8 @@ export interface UseCollaborationStore {
   isSynced: boolean;
   hasLostConnection: boolean;
   resetLostConnection: () => void;
+  isProviderDisabled: (room: string) => boolean;
+  resetProviderDisabled: (room: string) => void;
 }
 
 const defaultValues = {
@@ -29,6 +31,8 @@ const defaultValues = {
 
 // Track consecutive failures per room to prevent rapid reconnection loops
 const failureTracker = new Map<string, { count: number; lastFailureTime: number }>();
+// Track rooms where provider creation is temporarily disabled due to failures
+const disabledRooms = new Set<string>();
 const MAX_CONSECUTIVE_FAILURES = 5;
 const FAILURE_RESET_TIME = 30000; // 30 seconds
 
@@ -50,6 +54,20 @@ const getStatusName = (status: WebSocketStatus): string => {
 export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
   ...defaultValues,
   createProvider: (wsUrl, storeId, initialDoc) => {
+    // Check if provider creation is disabled for this room
+    if (disabledRooms.has(storeId)) {
+      console.warn('[WebSocket] Provider creation disabled for room, skipping', {
+        room: storeId,
+        timestamp: new Date().toISOString(),
+      });
+      // Return existing provider if it exists, otherwise throw an error
+      const existing = get().provider;
+      if (existing) {
+        return existing;
+      }
+      throw new Error(`Provider creation disabled for room ${storeId} due to too many failures`);
+    }
+
     // Destroy existing provider if one exists to prevent multiple connections
     const existingProvider = get().provider;
     if (existingProvider) {
@@ -62,6 +80,12 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
     
     // Reset failure tracker for this room when creating a new provider
     failureTracker.set(storeId, { count: 0, lastFailureTime: 0 });
+
+    console.log('[WebSocket] Creating new provider', {
+      room: storeId,
+      url: wsUrl,
+      timestamp: new Date().toISOString(),
+    });
 
     const doc = new Y.Doc({
       guid: storeId,
@@ -83,12 +107,15 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
         // Removed manual reconnect() call to let HocuspocusProvider handle reconnections
         console.log('[WebSocket] Disconnected from collaboration server', {
           room: storeId,
+          url: wsUrl,
           timestamp: new Date().toISOString(),
         });
       },
       onConnect() {
         // Reset failure tracker on successful connection
         failureTracker.set(storeId, { count: 0, lastFailureTime: 0 });
+        // Re-enable provider creation for this room on successful connection
+        disabledRooms.delete(storeId);
         
         console.log('[WebSocket] Connected to collaboration server', {
           room: storeId,
@@ -192,22 +219,34 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
         // But if we have too many consecutive failures, stop reconnecting
         if (closeCode === 1005) {
           if (tracker.count >= MAX_CONSECUTIVE_FAILURES) {
-            console.error('[WebSocket] Too many consecutive failures. Stopping reconnection attempts.', {
+            console.error('[WebSocket] Too many consecutive failures. Stopping reconnection attempts and disabling provider creation.', {
               room: storeId,
               consecutiveFailures: tracker.count,
               reason: closeReason,
+              url: wsUrl,
               timestamp: new Date().toISOString(),
             });
             // Stop reconnection by destroying the provider
             provider.destroy();
             set(defaultValues);
+            // Disable provider creation for this room temporarily
+            disabledRooms.add(storeId);
             // Clear failure tracker
             failureTracker.delete(storeId);
+            // Auto-reset after FAILURE_RESET_TIME
+            setTimeout(() => {
+              disabledRooms.delete(storeId);
+              console.log('[WebSocket] Provider creation re-enabled for room after timeout', {
+                room: storeId,
+                timestamp: new Date().toISOString(),
+              });
+            }, FAILURE_RESET_TIME);
           } else {
             console.warn('[WebSocket] Abnormal closure detected (code 1005). HocuspocusProvider will attempt reconnection.', {
               room: storeId,
               consecutiveFailures: tracker.count,
               reason: closeReason,
+              url: wsUrl,
               timestamp: new Date().toISOString(),
             });
           }
@@ -230,4 +269,9 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
     set(defaultValues);
   },
   resetLostConnection: () => set({ hasLostConnection: false }),
+  isProviderDisabled: (room: string) => disabledRooms.has(room),
+  resetProviderDisabled: (room: string) => {
+    disabledRooms.delete(room);
+    failureTracker.delete(room);
+  },
 }));
