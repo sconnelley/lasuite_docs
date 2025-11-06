@@ -270,7 +270,7 @@ export const DocToolBox = ({ doc }: DocToolBoxProps) => {
             if (isTopParent) {
               void router.push(`/`);
             } else if (parentId) {
-              void router.push(getDocUrl(parentId)).then(() => {
+              void router.push(getDocUrl(String(parentId))).then(() => {
                 setTimeout(() => {
                   treeContext?.treeData.deleteNode(doc.id);
                 }, 100);

@@ -260,7 +260,9 @@ export const DocTree = ({ currentDoc }: DocTreeProps) => {
               treeContext.treeData.setSelectedNode(
                 treeContext.root ?? undefined,
               );
-              router.push(getDocUrl(treeContext?.root?.id));
+              if (treeContext?.root?.id) {
+                router.push(getDocUrl(treeContext.root.id));
+              }
             }}
             aria-label={`${t('Open root document')}: ${treeContext.root?.title || t('Untitled document')}`}
             tabIndex={-1} // avoid double tabstop

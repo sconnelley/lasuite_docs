@@ -19,6 +19,7 @@ import {
   useDocTitleUpdate,
   useDuplicateDoc,
 } from '@/docs/doc-management';
+import { getDocUrl } from '@/utils';
 
 import { useDetachDoc } from '../api/useDetach';
 import MoveDocIcon from '../assets/doc-extract-bold.svg';
