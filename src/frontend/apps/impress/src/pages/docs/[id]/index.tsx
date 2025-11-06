@@ -61,7 +61,7 @@ interface DocProps {
 }
 
 const DocPage = ({ id }: DocProps) => {
-  const { hasLostConnection, resetLostConnection } = useProviderStore();
+  const { hasLostConnection, resetLostConnection, isConnected } = useProviderStore();
   const { isSkeletonVisible, setIsSkeletonVisible } = useSkeletonStore();
   const {
     data: docQuery,
@@ -71,7 +71,13 @@ const DocPage = ({ id }: DocProps) => {
   } = useDoc(
     { id },
     {
-      staleTime: 0,
+      // Increase staleTime to 30 seconds to reduce unnecessary refetches
+      // Document updates are handled via WebSocket, so we don't need frequent polling
+      staleTime: 30000, // 30 seconds
+      // Disable automatic refetches that can cause excessive API calls
+      refetchOnWindowFocus: false, // Don't refetch when window regains focus
+      refetchOnMount: false, // Don't refetch on component remount if data is fresh
+      refetchOnReconnect: false, // Don't refetch on network reconnect (WebSocket handles sync)
       queryKey: [KEY_DOC, { id }],
       retryDelay: 1000,
       retry: (failureCount, error) => {
@@ -124,14 +130,38 @@ const DocPage = ({ id }: DocProps) => {
   }, [id]);
 
   // Invalidate when provider store reports a lost connection
+  // Made less aggressive: only invalidate after a delay to prevent excessive refetches
+  // during brief reconnection events
   useEffect(() => {
-    if (hasLostConnection && doc?.id) {
-      void queryClient.invalidateQueries({
-        queryKey: [KEY_DOC, { id: doc.id }],
-      });
-      resetLostConnection();
+    if (!hasLostConnection || !doc?.id) {
+      return;
     }
-  }, [hasLostConnection, doc?.id, queryClient, resetLostConnection]);
+
+    // Add a delay before invalidating to avoid refetching during brief reconnection events
+    // If the connection reconnects quickly, we don't need to refetch
+    const timeoutId = setTimeout(() => {
+      // Check current connection state before invalidating
+      // Use a closure to capture the current state
+      const checkAndInvalidate = () => {
+        const currentState = useProviderStore.getState();
+        if (currentState.hasLostConnection && !currentState.isConnected) {
+          console.log('[Document] Invalidating document query after connection loss', {
+            docId: doc.id,
+            timestamp: new Date().toISOString(),
+          });
+          void queryClient.invalidateQueries({
+            queryKey: [KEY_DOC, { id: doc.id }],
+          });
+        }
+        resetLostConnection();
+      };
+      checkAndInvalidate();
+    }, 2000); // Wait 2 seconds before invalidating
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [hasLostConnection, doc?.id, queryClient, resetLostConnection, isConnected]);
 
   useEffect(() => {
     if (!docQuery || isFetching) {
