@@ -2,7 +2,7 @@ import { IncomingHttpHeaders } from 'http';
 
 import axios from 'axios';
 
-import { COLLABORATION_BACKEND_BASE_URL } from '@/env';
+import { API_VERSION, COLLABORATION_BACKEND_BASE_URL } from '@/env';
 
 export interface User {
   id: string;
@@ -72,15 +72,24 @@ async function fetch<T>(
   return response.data;
 }
 
+/**
+ * Construct API path with version prefix.
+ * Handles both 'docs/v1.0' and 'v1.0' formats.
+ */
+function getApiPath(endpoint: string): string {
+  const version = API_VERSION.startsWith('/') ? API_VERSION.slice(1) : API_VERSION;
+  return `/api/${version}/${endpoint}`;
+}
+
 export function fetchDocument(
   name: string,
   requestHeaders: IncomingHttpHeaders,
 ): Promise<Doc> {
-  return fetch<Doc>(`/api/v1.0/documents/${name}/`, requestHeaders);
+  return fetch<Doc>(getApiPath(`documents/${name}/`), requestHeaders);
 }
 
 export function fetchCurrentUser(
   requestHeaders: IncomingHttpHeaders,
 ): Promise<User> {
-  return fetch<User>('/api/v1.0/users/me/', requestHeaders);
+  return fetch<User>(getApiPath('users/me/'), requestHeaders);
 }
