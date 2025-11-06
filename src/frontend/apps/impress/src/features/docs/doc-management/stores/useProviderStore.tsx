@@ -1,4 +1,3 @@
-import { CloseEvent } from '@hocuspocus/common';
 import { HocuspocusProvider, WebSocketStatus } from '@hocuspocus/provider';
 import * as Y from 'yjs';
 import { create } from 'zustand';
