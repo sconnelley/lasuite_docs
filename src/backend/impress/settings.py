@@ -1000,6 +1000,10 @@ class Production(Base):
     SECURE_REDIRECT_EXEMPT = [
         "^__lbheartbeat__",
         "^__heartbeat__",
+        # Exempt API paths from SSL redirect for internal service-to-service communication
+        # The y-provider makes HTTP requests directly to the backend, and these should not be redirected
+        # External requests come through the gateway which handles HTTPS termination
+        "^api/",
     ]
 
     # Modern browsers require to have the `secure` attribute on cookies with `Samesite=none`
