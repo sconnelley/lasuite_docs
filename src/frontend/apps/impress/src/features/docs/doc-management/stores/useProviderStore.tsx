@@ -42,11 +42,8 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
       url: wsUrl,
       name: storeId,
       document: doc,
-      // Reconnection configuration
-      // Limit reconnection attempts to prevent infinite loops
-      maxAttempts: 5,
-      // Start with 1 second delay, exponential backoff handled by HocuspocusProvider
-      delay: 1000,
+      // HocuspocusProvider handles reconnection automatically with built-in backoff
+      // No need to configure maxAttempts or delay - those are not supported options
       onDisconnect(_data) {
         // HocuspocusProvider handles reconnection automatically
         // Manual reconnection can cause duplicate connections and reconnection loops
