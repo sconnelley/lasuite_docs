@@ -12,9 +12,26 @@ export const useCollaboration = (room?: string, initialContent?: Base64) => {
   const { provider, createProvider, destroyProvider } = useProviderStore();
 
   useEffect(() => {
-    if (!room || !collaborationUrl || provider) {
+    // Early return if prerequisites not met
+    if (!room || !collaborationUrl) {
       return;
     }
+
+    // If provider already exists, don't create another
+    // This prevents multiple providers from being created
+    if (provider) {
+      console.log('[useCollaboration] Provider already exists, skipping creation', {
+        room,
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+
+    console.log('[useCollaboration] Creating provider', {
+      room,
+      collaborationUrl,
+      timestamp: new Date().toISOString(),
+    });
 
     const newProvider = createProvider(collaborationUrl, room, initialContent);
     setBroadcastProvider(newProvider);
@@ -28,11 +45,15 @@ export const useCollaboration = (room?: string, initialContent?: Base64) => {
   ]);
 
   /**
-   * Destroy the provider when the component is unmounted
+   * Destroy the provider when the component unmounts or room changes
    */
   useEffect(() => {
     return () => {
       if (room) {
+        console.log('[useCollaboration] Cleanup: destroying provider', {
+          room,
+          timestamp: new Date().toISOString(),
+        });
         destroyProvider();
       }
     };
