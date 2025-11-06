@@ -13,7 +13,7 @@ export function getBasePath(): string {
   if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_PATH) {
     return process.env.NEXT_PUBLIC_BASE_PATH;
   }
-  
+
   // Fallback: try to read from Next.js router if available (runtime)
   if (typeof window !== 'undefined') {
     // Next.js sets __NEXT_DATA__.basePath at runtime
@@ -22,7 +22,7 @@ export function getBasePath(): string {
       return nextData.basePath;
     }
   }
-  
+
   return '';
 }
 

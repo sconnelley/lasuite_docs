@@ -77,7 +77,7 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
       });
       existingProvider.destroy();
     }
-    
+
     // Reset failure tracker for this room when creating a new provider
     failureTracker.set(storeId, { count: 0, lastFailureTime: 0 });
 
@@ -116,7 +116,7 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
         failureTracker.set(storeId, { count: 0, lastFailureTime: 0 });
         // Re-enable provider creation for this room on successful connection
         disabledRooms.delete(storeId);
-        
+
         console.log('[WebSocket] Connected to collaboration server', {
           room: storeId,
           timestamp: new Date().toISOString(),
@@ -133,7 +133,7 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
         const prevState = get();
         const nextConnected = status === WebSocketStatus.Connected;
         const statusChanged = prevState.isConnected !== nextConnected;
-        
+
         // Log status changes for monitoring
         // Note: status is a WebSocketStatus enum value
         if (statusChanged) {
@@ -146,7 +146,7 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
             timestamp: new Date().toISOString(),
           });
         }
-        
+
         set((state) => {
           return {
             isConnected: nextConnected,
@@ -180,10 +180,10 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
         const closeCode = data.event.code;
         const closeReason = data.event.reason || 'No reason provided';
         const now = Date.now();
-        
+
         // Get failure tracker for this room
         const tracker = failureTracker.get(storeId) || { count: 0, lastFailureTime: 0 };
-        
+
         // Track consecutive failures for abnormal closures
         if (closeCode === 1005) {
           // Reset failure count if enough time has passed
@@ -197,7 +197,7 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
           // Reset failure count on normal closure or other codes
           failureTracker.set(storeId, { count: 0, lastFailureTime: 0 });
         }
-        
+
         console.log('[WebSocket] Connection closed', {
           room: storeId,
           code: closeCode,
@@ -207,13 +207,13 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
           consecutiveFailures: tracker.count,
           timestamp: new Date().toISOString(),
         });
-        
+
         // Only handle normal closure (code 1000) - server-initiated reset
         // For abnormal closures (1005), let HocuspocusProvider handle reconnection
         if (closeCode === 1000) {
           provider.disconnect();
         }
-        
+
         // For code 1005 (abnormal closure), log warning but don't interfere
         // HocuspocusProvider will attempt to reconnect automatically
         // But if we have too many consecutive failures, stop reconnecting
