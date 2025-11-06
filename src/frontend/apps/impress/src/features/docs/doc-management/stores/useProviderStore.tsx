@@ -77,7 +77,7 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
             room: storeId,
             previousStatus: prevState.isConnected ? 'connected' : 'disconnected',
             newStatus: nextConnected ? 'connected' : 'disconnected',
-            status: WebSocketStatus[status],
+            statusCode: status,
             timestamp: new Date().toISOString(),
           });
         }
