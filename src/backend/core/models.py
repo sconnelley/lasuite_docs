@@ -830,23 +830,25 @@ class Document(MP_Node, BaseModel):
             subject = str(subject)  # Force translation
 
             # Debug: Log email configuration and sending attempt
+            email_host = getattr(settings, "EMAIL_HOST", None)
+            email_port = getattr(settings, "EMAIL_PORT", None)
+            email_host_user = getattr(settings, "EMAIL_HOST_USER", None)
+            email_host_password_set = bool(getattr(settings, "EMAIL_HOST_PASSWORD", None))
+            
             logger.info(
-                "Attempting to send email invitation",
-                extra={
-                    "to": emails,
-                    "from": settings.EMAIL_FROM,
-                    "subject": subject.capitalize(),
-                    "email_backend": settings.EMAIL_BACKEND,
-                    "email_host": getattr(settings, "EMAIL_HOST", None),
-                    "email_port": getattr(settings, "EMAIL_PORT", None),
-                    "email_use_tls": getattr(settings, "EMAIL_USE_TLS", None),
-                    "email_use_ssl": getattr(settings, "EMAIL_USE_SSL", None),
-                    "email_host_user": getattr(settings, "EMAIL_HOST_USER", None),
-                    "email_host_password_set": bool(getattr(settings, "EMAIL_HOST_PASSWORD", None)),
-                },
+                f"Attempting to send email invitation: to={emails}, from={settings.EMAIL_FROM}, "
+                f"subject={subject.capitalize()}, backend={settings.EMAIL_BACKEND}, "
+                f"host={email_host}, port={email_port}, use_tls={getattr(settings, 'EMAIL_USE_TLS', None)}, "
+                f"use_ssl={getattr(settings, 'EMAIL_USE_SSL', None)}, "
+                f"user={email_host_user}, password_set={email_host_password_set}"
             )
 
             try:
+                import socket
+                import time
+                start_time = time.time()
+                logger.info(f"Connecting to SMTP server {email_host}:{email_port}...")
+                
                 send_mail(
                     subject.capitalize(),
                     msg_plain,
@@ -855,7 +857,31 @@ class Document(MP_Node, BaseModel):
                     html_message=msg_html,
                     fail_silently=False,
                 )
-                logger.info("Email invitation sent successfully", extra={"to": emails})
+                
+                elapsed_time = time.time() - start_time
+                logger.info(f"Email invitation sent successfully in {elapsed_time:.2f}s", extra={"to": emails})
+            except socket.timeout as exception:
+                logger.error(
+                    f"SMTP connection timeout after {getattr(settings, 'EMAIL_TIMEOUT', 10)}s: "
+                    f"Could not connect to {email_host}:{email_port}. "
+                    f"Check network connectivity and firewall rules.",
+                    exc_info=True,
+                )
+                raise
+            except socket.gaierror as exception:
+                logger.error(
+                    f"SMTP DNS resolution failed for {email_host}:{email_port}: {exception}. "
+                    f"Check EMAIL_HOST setting.",
+                    exc_info=True,
+                )
+                raise
+            except ConnectionRefusedError as exception:
+                logger.error(
+                    f"SMTP connection refused to {email_host}:{email_port}: {exception}. "
+                    f"Check EMAIL_PORT and that the SMTP server is running.",
+                    exc_info=True,
+                )
+                raise
             except smtplib.SMTPException as exception:
                 logger.error(
                     "invitation to %s was not sent: %s",
@@ -863,6 +889,7 @@ class Document(MP_Node, BaseModel):
                     exception,
                     exc_info=True,  # Include full traceback
                 )
+                raise
             except Exception as exception:
                 # Catch any other exceptions (connection errors, configuration errors, etc.)
                 logger.error(
@@ -872,6 +899,7 @@ class Document(MP_Node, BaseModel):
                     type(exception).__name__,
                     exc_info=True,  # Include full traceback
                 )
+                raise
 
     def send_invitation_email(self, email, role, sender, language=None):
         """Method allowing a user to send an email invitation to another user for a document."""

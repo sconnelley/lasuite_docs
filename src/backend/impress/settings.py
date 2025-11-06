@@ -450,6 +450,7 @@ class Base(Configuration):
     EMAIL_USE_TLS = values.BooleanValue(False)
     EMAIL_USE_SSL = values.BooleanValue(False)
     EMAIL_FROM = values.Value("from@example.com")
+    EMAIL_TIMEOUT = values.PositiveIntegerValue(10)  # 10 second timeout for SMTP connections
 
     AUTH_USER_MODEL = "core.User"
     INVITATION_VALIDITY_DURATION = 604800  # 7 days, in seconds
@@ -858,18 +859,10 @@ class Base(Configuration):
         import logging
         logger = logging.getLogger(__name__)
         logger.info(
-            "Email configuration",
-            extra={
-                "EMAIL_BACKEND": cls.EMAIL_BACKEND,
-                "EMAIL_HOST": cls.EMAIL_HOST,
-                "EMAIL_PORT": cls.EMAIL_PORT,
-                "EMAIL_USE_TLS": cls.EMAIL_USE_TLS,
-                "EMAIL_USE_SSL": cls.EMAIL_USE_SSL,
-                "EMAIL_HOST_USER": cls.EMAIL_HOST_USER,
-                "EMAIL_HOST_PASSWORD_SET": bool(cls.EMAIL_HOST_PASSWORD),
-                "EMAIL_FROM": cls.EMAIL_FROM,
-                "EMAIL_BRAND_NAME": cls.EMAIL_BRAND_NAME,
-            },
+            f"Email configuration: backend={cls.EMAIL_BACKEND}, host={cls.EMAIL_HOST}, "
+            f"port={cls.EMAIL_PORT}, use_tls={cls.EMAIL_USE_TLS}, use_ssl={cls.EMAIL_USE_SSL}, "
+            f"user={cls.EMAIL_HOST_USER}, password_set={bool(cls.EMAIL_HOST_PASSWORD)}, "
+            f"from={cls.EMAIL_FROM}, brand={cls.EMAIL_BRAND_NAME}, timeout={cls.EMAIL_TIMEOUT}s"
         )
 
         # The SENTRY_DSN setting should be available to activate sentry for an environment
