@@ -55,21 +55,46 @@ async function fetch<T>(
   path: string,
   requestHeaders: IncomingHttpHeaders,
 ): Promise<T> {
-  const response = await axios.get<T>(
-    `${COLLABORATION_BACKEND_BASE_URL}${path}`,
-    {
-      headers: {
-        cookie: requestHeaders['cookie'],
-        origin: requestHeaders['origin'],
+  try {
+    const response = await axios.get<T>(
+      `${COLLABORATION_BACKEND_BASE_URL}${path}`,
+      {
+        headers: {
+          cookie: requestHeaders['cookie'],
+          origin: requestHeaders['origin'],
+          // Set X-Forwarded-Proto to https so Django doesn't redirect HTTP to HTTPS
+          // This is needed because internal Railway services use HTTP, not HTTPS
+          'X-Forwarded-Proto': 'https',
+        },
+        // Follow redirects (axios does this by default, but be explicit)
+        maxRedirects: 5,
+        // Preserve cookies across redirects
+        withCredentials: true,
+        // Accept 2xx and 3xx status codes (redirects)
+        validateStatus: (status) => status >= 200 && status < 400,
       },
-    },
-  );
+    );
 
-  if (response.status !== 200) {
-    throw new Error(`Failed to fetch ${path}: ${response.statusText}`);
+    // If we got a redirect (3xx), axios should have followed it automatically
+    // But if status is not 200, something went wrong
+    if (response.status !== 200) {
+      throw new Error(`Failed to fetch ${path}: ${response.status} ${response.statusText}`);
+    }
+
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      // Log more details about the error
+      const message = `Failed to fetch ${path}: ${error.message}`;
+      if (error.response) {
+        throw new Error(`${message} - Status: ${error.response.status} ${error.response.statusText}`);
+      } else if (error.request) {
+        throw new Error(`${message} - No response received`);
+      }
+      throw new Error(message);
+    }
+    throw error;
   }
-
-  return response.data;
 }
 
 /**
