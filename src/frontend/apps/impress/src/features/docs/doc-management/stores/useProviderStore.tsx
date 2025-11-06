@@ -28,8 +28,6 @@ const defaultValues = {
   hasLostConnection: false,
 };
 
-type ExtendedCloseEvent = CloseEvent & { wasClean: boolean };
-
 export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
   ...defaultValues,
   createProvider: (wsUrl, storeId, initialDoc) => {
@@ -45,7 +43,7 @@ export const useProviderStore = create<UseCollaborationStore>((set, get) => ({
       url: wsUrl,
       name: storeId,
       document: doc,
-      onDisconnect(data) {
+      onDisconnect(_data) {
         // HocuspocusProvider handles reconnection automatically
         // Manual reconnection can cause duplicate connections and reconnection loops
         // Removed manual reconnect() call to let HocuspocusProvider handle reconnections
